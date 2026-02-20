@@ -17,35 +17,44 @@ function getClient(token: string): ApifyClient {
   return new ApifyClient({ token });
 }
 
-interface ApifyTweetItem {
-  author?: {
-    userName?: string;
-    name?: string;
-    profilePicture?: string;
-  };
+// Replies & Quotes return tweet objects
+interface TweetItem {
+  username?: string;
   user_name?: string;
-  full_name?: string;
-  profile_image_url?: string;
   text?: string;
   full_text?: string;
 }
 
+// Retweeters & Favoriters return user objects
+interface UserItem {
+  username?: string;
+  name?: string;
+  profile_image_url?: string;
+}
+
+type ApifyItem = TweetItem & UserItem;
+
+// Replies/Quotes are tweet-shaped; Retweeters/Favoriters are user-shaped
+const USER_MODES: InteractionType[] = ['retweets', 'likes'];
+
 function extractParticipant(
-  item: ApifyTweetItem,
+  item: ApifyItem,
   type: InteractionType
 ): Participant | null {
-  const userName =
-    item.author?.userName || item.user_name;
-  const displayName =
-    item.author?.name || item.full_name || userName;
-  const profilePicture =
-    item.author?.profilePicture || item.profile_image_url || '';
+  const isUserMode = USER_MODES.includes(type);
 
+  const userName = item.username;
   if (!userName) return null;
+
+  const displayName = isUserMode
+    ? item.name || userName
+    : item.user_name || userName;
+
+  const profilePicture = item.profile_image_url || '';
 
   return {
     userName,
-    displayName: displayName || userName,
+    displayName,
     profilePicture,
     interactionTypes: [type],
     tweetText: item.text || item.full_text,
@@ -66,23 +75,26 @@ export async function scrapeInteractions(
     quotes: 0,
   };
 
-  // Run each interaction type in parallel
   const results = await Promise.allSettled(
     types.map(async (type) => {
       const run = await client.actor(ACTOR_ID).call(
         {
           mode: MODE_MAP[type],
-          tweetId,
+          id: tweetId,
           maxItems: 500,
         },
         { waitSecs: 300 }
       );
 
+      if (run.status !== 'SUCCEEDED') {
+        throw new Error(`Actor run ${run.status} for ${type}: ${run.statusMessage || ''}`);
+      }
+
       const { items } = await client
         .dataset(run.defaultDatasetId)
         .listItems();
 
-      return { type, items: items as unknown as ApifyTweetItem[] };
+      return { type, items: items as unknown as ApifyItem[] };
     })
   );
 
@@ -105,6 +117,10 @@ export async function scrapeInteractions(
       if (existing) {
         if (!existing.interactionTypes.includes(type)) {
           existing.interactionTypes.push(type);
+        }
+        // Upgrade profile picture if missing
+        if (!existing.profilePicture && p.profilePicture) {
+          existing.profilePicture = p.profilePicture;
         }
       } else {
         participantMap.set(key, p);
