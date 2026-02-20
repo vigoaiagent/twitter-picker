@@ -56,8 +56,8 @@ export default function Home() {
         throw new Error('Invalid Twitter/X URL. Expected: https://x.com/user/status/123456');
       }
 
-      const data = await scrapeFromBrowser(tweetId, typeFilters, apiToken, (type, count) => {
-        setProgress(`Fetched ${count} ${type}`);
+      const data = await scrapeFromBrowser(tweetId, typeFilters, apiToken, (msg) => {
+        setProgress(msg);
       });
 
       setAllParticipants(data.participants);
