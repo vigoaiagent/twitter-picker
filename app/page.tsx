@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Participant, InteractionType, ScrapeResponse } from '@/lib/types';
+import { Participant, InteractionType } from '@/lib/types';
+import { parseTweetUrl } from '@/lib/utils';
+import { scrapeFromBrowser } from '@/lib/apify-client';
 import TweetInput from '@/components/TweetInput';
 import FilterBar from '@/components/FilterBar';
 import ParticipantList from '@/components/ParticipantList';
@@ -29,6 +31,7 @@ export default function Home() {
   const [winners, setWinners] = useState<Participant[]>([]);
   const [fetched, setFetched] = useState(false);
   const [winnerCount, setWinnerCount] = useState(1);
+  const [progress, setProgress] = useState('');
 
   const handleFetch = async (tweetUrl: string, apiToken: string) => {
     setLoading(true);
@@ -36,19 +39,17 @@ export default function Home() {
     setParticipants([]);
     setWinners([]);
     setFetched(false);
+    setProgress('Starting scrape...');
 
     try {
-      const res = await fetch('/api/scrape', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tweetUrl, types: filters, apiToken }),
-      });
-
-      const data: ScrapeResponse & { error?: string } = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to fetch participants');
+      const tweetId = parseTweetUrl(tweetUrl);
+      if (!tweetId) {
+        throw new Error('Invalid Twitter/X URL. Expected: https://x.com/user/status/123456');
       }
+
+      const data = await scrapeFromBrowser(tweetId, filters, apiToken, (type, count) => {
+        setProgress(`Fetched ${count} ${type}`);
+      });
 
       setParticipants(data.participants);
       setCounts(data.counts);
@@ -61,6 +62,7 @@ export default function Home() {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
+      setProgress('');
     }
   };
 
@@ -109,7 +111,7 @@ export default function Home() {
       )}
 
       {/* Loading */}
-      {loading && <LoadingState />}
+      {loading && <LoadingState progress={progress} />}
 
       {/* Results */}
       {fetched && !loading && participants.length > 0 && (

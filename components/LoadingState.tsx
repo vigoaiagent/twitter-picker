@@ -1,6 +1,10 @@
 'use client';
 
-export default function LoadingState() {
+interface Props {
+  progress?: string;
+}
+
+export default function LoadingState({ progress }: Props) {
   return (
     <div className="flex flex-col items-center gap-4 py-12">
       <div className="relative w-16 h-16">
@@ -9,7 +13,9 @@ export default function LoadingState() {
       </div>
       <div className="text-center">
         <p className="text-white font-medium">Scraping tweet interactions...</p>
-        <p className="text-gray-400 text-sm mt-1">This may take 30-60 seconds</p>
+        <p className="text-gray-400 text-sm mt-1">
+          {progress || 'This may take 30-60 seconds'}
+        </p>
       </div>
     </div>
   );
