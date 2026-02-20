@@ -26,14 +26,15 @@ export default function Home() {
     'quotes',
   ]);
   const [spinning, setSpinning] = useState(false);
-  const [winner, setWinner] = useState<Participant | null>(null);
+  const [winners, setWinners] = useState<Participant[]>([]);
   const [fetched, setFetched] = useState(false);
+  const [winnerCount, setWinnerCount] = useState(1);
 
   const handleFetch = async (tweetUrl: string, apiToken: string) => {
     setLoading(true);
     setError(null);
     setParticipants([]);
-    setWinner(null);
+    setWinners([]);
     setFetched(false);
 
     try {
@@ -67,13 +68,13 @@ export default function Home() {
     p.interactionTypes.some((t) => filters.includes(t))
   );
 
-  const handleWinner = useCallback((p: Participant) => {
-    setWinner(p);
+  const handleWinners = useCallback((w: Participant[]) => {
+    setWinners(w);
     setSpinning(false);
   }, []);
 
   const handlePickAgain = () => {
-    setWinner(null);
+    setWinners([]);
   };
 
   return (
@@ -84,7 +85,7 @@ export default function Home() {
           Twitter Giveaway Picker
         </h1>
         <p className="mt-3 text-gray-400 max-w-lg mx-auto">
-          Paste a tweet URL, scrape its interactions, and randomly pick a winner
+          Paste a tweet URL, scrape its interactions, and randomly pick winners
           with a spinning wheel.
         </p>
       </div>
@@ -118,22 +119,40 @@ export default function Home() {
             activeFilters={filters}
           />
 
-          {/* Wheel + Winner */}
-          <div className="flex flex-col items-center gap-8 w-full max-w-lg">
+          {/* Winner count + Wheel + Winners */}
+          <div className="flex flex-col items-center gap-6 w-full max-w-2xl">
+            {/* Winner count selector */}
+            <div className="flex items-center gap-3">
+              <label htmlFor="winner-count" className="text-sm text-gray-300">
+                Number of winners:
+              </label>
+              <input
+                id="winner-count"
+                type="number"
+                min={1}
+                max={Math.min(filteredParticipants.length, 50)}
+                value={winnerCount}
+                onChange={(e) => setWinnerCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-20 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-center text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                disabled={spinning}
+              />
+            </div>
+
             {filteredParticipants.length > 0 && (
               <SpinWheel
                 participants={filteredParticipants}
-                onFinish={handleWinner}
+                onFinish={handleWinners}
                 spinning={spinning}
                 onSpinStart={() => {
                   setSpinning(true);
-                  setWinner(null);
+                  setWinners([]);
                 }}
+                winnerCount={winnerCount}
               />
             )}
 
-            {winner && (
-              <WinnerCard winner={winner} onPickAgain={handlePickAgain} />
+            {winners.length > 0 && (
+              <WinnerCard winners={winners} onPickAgain={handlePickAgain} />
             )}
           </div>
         </>

@@ -38,9 +38,12 @@ type ApifyItem = TweetItem & UserItem;
 const USER_MODES: InteractionType[] = ['retweets', 'likes'];
 
 function extractParticipant(
-  item: ApifyItem,
+  item: ApifyItem & { status?: string },
   type: InteractionType
 ): Participant | null {
+  // Skip Apify placeholder items like {"status":"empty","reason":"no_results"}
+  if (item.status === 'empty') return null;
+
   const isUserMode = USER_MODES.includes(type);
 
   const userName = item.username;
