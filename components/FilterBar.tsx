@@ -5,7 +5,6 @@ import { InteractionType } from '@/lib/types';
 const FILTERS: { type: InteractionType; label: string; icon: string }[] = [
   { type: 'replies', label: 'Replies', icon: '💬' },
   { type: 'retweets', label: 'Retweets', icon: '🔁' },
-  { type: 'likes', label: 'Likes', icon: '❤️' },
   { type: 'quotes', label: 'Quotes', icon: '✍️' },
 ];
 

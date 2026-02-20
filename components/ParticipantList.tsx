@@ -5,16 +5,16 @@ import { Participant, InteractionType } from '@/lib/types';
 interface Props {
   participants: Participant[];
   activeFilters: InteractionType[];
+  totalBeforeFilter: number;
 }
 
 const TYPE_ICONS: Record<InteractionType, string> = {
   replies: '💬',
   retweets: '🔁',
-  likes: '❤️',
   quotes: '✍️',
 };
 
-export default function ParticipantList({ participants, activeFilters }: Props) {
+export default function ParticipantList({ participants, activeFilters, totalBeforeFilter }: Props) {
   const filtered = participants.filter((p) =>
     p.interactionTypes.some((t) => activeFilters.includes(t))
   );
@@ -29,16 +29,21 @@ export default function ParticipantList({ participants, activeFilters }: Props) 
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <h3 className="text-lg font-semibold text-white mb-3">
-        Participants ({filtered.length})
+      <h3 className="text-lg font-semibold text-white mb-1">
+        Eligible Participants ({filtered.length})
       </h3>
+      {totalBeforeFilter > filtered.length && (
+        <p className="text-xs text-gray-500 mb-3">
+          {totalBeforeFilter - filtered.length} filtered out by quality filters
+        </p>
+      )}
       <div className="max-h-80 overflow-y-auto rounded-lg border border-gray-700 bg-gray-800/50">
         {filtered.map((p) => (
           <div
             key={p.userName}
             className="flex items-center gap-3 px-4 py-3 border-b border-gray-700/50 last:border-b-0 hover:bg-gray-700/30"
           >
-            {p.profilePicture ? (
+            {p.profilePicture && p.hasCustomAvatar ? (
               <img
                 src={p.profilePicture}
                 alt={p.displayName}
@@ -52,8 +57,11 @@ export default function ParticipantList({ participants, activeFilters }: Props) 
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-white truncate">
                 {p.displayName}
+                {p.isBlueVerified && <span className="ml-1 text-blue-400 text-xs">✓</span>}
               </div>
-              <div className="text-xs text-gray-400">@{p.userName}</div>
+              <div className="text-xs text-gray-400">
+                @{p.userName} · {p.followers} followers
+              </div>
             </div>
             <div className="flex gap-1">
               {p.interactionTypes.map((t) => (

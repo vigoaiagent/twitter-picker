@@ -1,4 +1,4 @@
-export type InteractionType = 'replies' | 'retweets' | 'likes' | 'quotes';
+export type InteractionType = 'replies' | 'retweets' | 'quotes';
 
 export interface Participant {
   userName: string;
@@ -6,6 +6,16 @@ export interface Participant {
   profilePicture: string;
   interactionTypes: InteractionType[];
   tweetText?: string;
+  followers: number;
+  createdAt: string;
+  isBlueVerified: boolean;
+  hasCustomAvatar: boolean;
+}
+
+export interface FilterOptions {
+  minAccountAgeDays: number;
+  minFollowers: number;
+  requireAvatar: boolean;
 }
 
 export interface ScrapeRequest {
@@ -17,9 +27,4 @@ export interface ScrapeRequest {
 export interface ScrapeResponse {
   participants: Participant[];
   counts: Record<InteractionType, number>;
-}
-
-export interface DrawResult {
-  winner: Participant;
-  timestamp: number;
 }
