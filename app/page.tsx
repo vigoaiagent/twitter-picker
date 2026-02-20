@@ -29,7 +29,7 @@ export default function Home() {
   const [winner, setWinner] = useState<Participant | null>(null);
   const [fetched, setFetched] = useState(false);
 
-  const handleFetch = async (tweetUrl: string) => {
+  const handleFetch = async (tweetUrl: string, apiToken: string) => {
     setLoading(true);
     setError(null);
     setParticipants([]);
@@ -40,7 +40,7 @@ export default function Home() {
       const res = await fetch('/api/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tweetUrl, types: filters }),
+        body: JSON.stringify({ tweetUrl, types: filters, apiToken }),
       });
 
       const data: ScrapeResponse & { error?: string } = await res.json();

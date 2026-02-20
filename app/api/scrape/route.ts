@@ -8,7 +8,14 @@ const VALID_TYPES: InteractionType[] = ['replies', 'retweets', 'likes', 'quotes'
 export async function POST(req: NextRequest) {
   try {
     const body: ScrapeRequest = await req.json();
-    const { tweetUrl, types } = body;
+    const { tweetUrl, types, apiToken } = body;
+
+    if (!apiToken || typeof apiToken !== 'string') {
+      return NextResponse.json(
+        { error: 'Apify API Token is required' },
+        { status: 400 }
+      );
+    }
 
     if (!tweetUrl || typeof tweetUrl !== 'string') {
       return NextResponse.json(
@@ -35,7 +42,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await scrapeInteractions(tweetId, selectedTypes);
+    const result = await scrapeInteractions(tweetId, selectedTypes, apiToken);
 
     return NextResponse.json(result);
   } catch (err) {

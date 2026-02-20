@@ -11,6 +11,7 @@ export interface Participant {
 export interface ScrapeRequest {
   tweetUrl: string;
   types: InteractionType[];
+  apiToken: string;
 }
 
 export interface ScrapeResponse {

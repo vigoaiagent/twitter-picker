@@ -10,10 +10,9 @@ const MODE_MAP: Record<InteractionType, string> = {
   quotes: 'Get Quotes',
 };
 
-function getClient(): ApifyClient {
-  const token = process.env.APIFY_API_TOKEN;
-  if (!token || token === 'your_apify_token_here') {
-    throw new Error('APIFY_API_TOKEN is not configured');
+function getClient(token: string): ApifyClient {
+  if (!token) {
+    throw new Error('Apify API Token is required');
   }
   return new ApifyClient({ token });
 }
@@ -55,9 +54,10 @@ function extractParticipant(
 
 export async function scrapeInteractions(
   tweetId: string,
-  types: InteractionType[]
+  types: InteractionType[],
+  apiToken: string
 ): Promise<{ participants: Participant[]; counts: Record<InteractionType, number> }> {
-  const client = getClient();
+  const client = getClient(apiToken);
   const participantMap = new Map<string, Participant>();
   const counts: Record<InteractionType, number> = {
     replies: 0,
