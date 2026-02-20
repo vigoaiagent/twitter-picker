@@ -46,11 +46,14 @@ async function runActorAndGetItems(
   tweetId: string,
   type: InteractionType
 ): Promise<{ type: InteractionType; items: ApifyItem[] }> {
-  const url = `${BASE_URL}/acts/${ACTOR_ID}/run-sync-get-dataset-items?token=${apiToken}`;
+  const url = `${BASE_URL}/acts/${ACTOR_ID}/run-sync-get-dataset-items`;
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiToken}`,
+    },
     body: JSON.stringify({
       mode: MODE_MAP[type],
       id: tweetId,
