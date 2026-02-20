@@ -7,7 +7,7 @@ import { scrapeFromBrowser } from '@/lib/apify-client';
 import TweetInput from '@/components/TweetInput';
 import FilterBar from '@/components/FilterBar';
 import ParticipantList from '@/components/ParticipantList';
-import SpinWheel from '@/components/SpinWheel';
+import RandomPicker from '@/components/RandomPicker';
 import WinnerCard from '@/components/WinnerCard';
 import LoadingState from '@/components/LoadingState';
 
@@ -27,7 +27,7 @@ export default function Home() {
     'likes',
     'quotes',
   ]);
-  const [spinning, setSpinning] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [winners, setWinners] = useState<Participant[]>([]);
   const [fetched, setFetched] = useState(false);
   const [winnerCount, setWinnerCount] = useState(1);
@@ -56,7 +56,7 @@ export default function Home() {
       setFetched(true);
 
       if (data.participants.length === 0) {
-        setError('No participants found. Try selecting different interaction types.');
+        setError('No participants found. The scraper may not have access to this data on Twitter/X.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -72,7 +72,7 @@ export default function Home() {
 
   const handleWinners = useCallback((w: Participant[]) => {
     setWinners(w);
-    setSpinning(false);
+    setPicking(false);
   }, []);
 
   const handlePickAgain = () => {
@@ -87,8 +87,7 @@ export default function Home() {
           Twitter Giveaway Picker
         </h1>
         <p className="mt-3 text-gray-400 max-w-lg mx-auto">
-          Paste a tweet URL, scrape its interactions, and randomly pick winners
-          with a spinning wheel.
+          Paste a tweet URL, scrape its interactions, and randomly pick winners.
         </p>
       </div>
 
@@ -116,14 +115,18 @@ export default function Home() {
       {/* Results */}
       {fetched && !loading && participants.length > 0 && (
         <>
+          {/* Scrape summary */}
+          <div className="w-full max-w-2xl text-sm text-gray-400 text-center">
+            Note: Twitter/X limits access to some data. Types showing 0 may be unavailable for this tweet.
+          </div>
+
           <ParticipantList
             participants={participants}
             activeFilters={filters}
           />
 
-          {/* Winner count + Wheel + Winners */}
+          {/* Winner picker */}
           <div className="flex flex-col items-center gap-6 w-full max-w-2xl">
-            {/* Winner count selector */}
             <div className="flex items-center gap-3">
               <label htmlFor="winner-count" className="text-sm text-gray-300">
                 Number of winners:
@@ -136,17 +139,17 @@ export default function Home() {
                 value={winnerCount}
                 onChange={(e) => setWinnerCount(Math.max(1, parseInt(e.target.value) || 1))}
                 className="w-20 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-center text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                disabled={spinning}
+                disabled={picking}
               />
             </div>
 
             {filteredParticipants.length > 0 && (
-              <SpinWheel
+              <RandomPicker
                 participants={filteredParticipants}
                 onFinish={handleWinners}
-                spinning={spinning}
-                onSpinStart={() => {
-                  setSpinning(true);
+                picking={picking}
+                onPickStart={() => {
+                  setPicking(true);
                   setWinners([]);
                 }}
                 winnerCount={winnerCount}
